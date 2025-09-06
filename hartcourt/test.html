@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Space Proxy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>🚀 My Space Proxy</h1>
+
+    <!-- Tabs -->
+    <div id="tabBar" class="tab-bar"></div>
+
+    <!-- Browser Navbar -->
+    <div class="browser-bar">
+        <button onclick="goBack()">⬅</button>
+        <button onclick="goForward()">➡</button>
+        <button onclick="reloadPage()">⟳</button>
+        <input type="text" id="urlInput" placeholder="Enter URL..." />
+        <button onclick="goHome()">🏠</button>
+        <button onclick="loadTyped()">🔎</button>
+        <button onclick="newTab()">➕</button>
+    </div>
+
+    <!-- Iframe -->
+    <div class="iframe-container">
+        <iframe id="proxyFrame" src=""></iframe>
+    </div>
+</div>
+
+<script>
+    const frame = document.getElementById("proxyFrame");
+    const input = document.getElementById("urlInput");
+    const tabBar = document.getElementById("tabBar");
+
+    let tabs = [];
+    let currentTab = null;
+
+    function renderTabs() {
+        tabBar.innerHTML = "";
+        tabs.forEach((tab, i) => {
+            const btn = document.createElement("div");
+            btn.className = "tab" + (i === currentTab ? " active" : "");
+            btn.innerHTML = `
+          <span>${tab.title || "New Tab"}</span>
+          <button onclick="closeTab(${i})">✖</button>
+        `;
+            btn.onclick = () => switchTab(i);
+            tabBar.appendChild(btn);
+        });
+    }
+
+    function newTab(url = "") {
+        tabs.push({ url, title: "New Tab", history: [], historyIndex: -1 });
+        currentTab = tabs.length - 1;
+        renderTabs();
+        if (url) loadSite(url);
+        else goHome();
+    }
+
+    function switchTab(i) {
+        currentTab = i;
+        const tab = tabs[i];
+        input.value = tab.url || "";
+        frame.src = tab.url ? "/proxy?url=" + encodeURIComponent(tab.url) : "";
+        renderTabs();
+    }
+
+    function closeTab(i) {
+        tabs.splice(i, 1);
+        if (tabs.length === 0) {
+            newTab();
+        } else {
+            currentTab = Math.max(0, i - 1);
+            switchTab(currentTab);
+        }
+    }
+
+    function updateTabTitle(title) {
+        if (currentTab !== null && tabs[currentTab]) {
+            tabs[currentTab].title = title;
+            renderTabs();
+        }
+    }
+
+    function loadSite(url) {
+        if (!tabs[currentTab]) return;
+        tabs[currentTab].url = url;
+        frame.src = "/proxy?url=" + encodeURIComponent(url);
+        input.value = url;
+        updateTabTitle(new URL(url).hostname);
+    }
+
+    function loadTyped() {
+        let url = input.value.trim();
+        if (!url.startsWith("http")) {
+            url = "https://" + url;
+        }
+        loadSite(url);
+    }
+
+    function goBack() {
+        const tab = tabs[currentTab];
+        if (tab.historyIndex > 0) {
+            tab.historyIndex--;
+            loadSite(tab.history[tab.historyIndex]);
+        }
+    }
+
+    function goForward() {
+        const tab = tabs[currentTab];
+        if (tab.historyIndex < tab.history.length - 1) {
+            tab.historyIndex++;
+            loadSite(tab.history[tab.historyIndex]);
+        }
+    }
+
+    function reloadPage() {
+        const tab = tabs[currentTab];
+        if (tab.url) {
+            loadSite(tab.url);
+        }
+    }
+
+    function goHome() {
+        frame.src = "";
+        input.value = "";
+        if (tabs[currentTab]) {
+            tabs[currentTab].url = "";
+            tabs[currentTab].title = "New Tab";
+        }
+        renderTabs();
+    }
+
+    // Start with one tab
+    newTab();
+</script>
+</body>
+</html>
