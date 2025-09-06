@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "express": "^4.17.1",
+    "http-proxy-middleware": "^2.0.1"
+  },
+  "description": "A universal proxy server for any site",
+  "main": "server.js",
+  "name": "universal-proxy",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "1.0.0"
+}
